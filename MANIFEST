@@ -1,0 +1,11 @@
+Changes
+LICENSE
+MANIFEST
+Makefile.PL
+README
+XS.xs
+src/yuarel.c
+src/yuarel.h
+lib/URL/XS.pm
+t/01_base.t
+t/02_parse_url.t

@@ -1,0 +1,39 @@
+name: CI
+
+on:
+  push:
+    branches:
+      - master
+
+jobs:
+  build:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ 'ubuntu-20.04' ]
+        perl: [ '5.34', '5.32', '5.30', '5.28', '5.26' ]
+    name: Build on Perl v${{ matrix.perl }} and OS ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: Set up perl
+        uses: shogo82148/actions-setup-perl@v1
+        with:
+          perl-version: ${{ matrix.perl }}
+      - run: perl -V
+
+      - name: Make package
+        run: |
+          perl Makefile.PL
+          make
+          make install
+          make test
+
+      - name: Run tests
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          cpanm --quiet --notest Test::Pod::Coverage Devel::Cover::Report::Coveralls
+          perl -MTest::More -MTest::Pod::Coverage -e "pod_coverage_ok('URL::XS','URL::XS is covered');done_testing();"
+          PERL5OPT=-MDevel::Cover=-coverage,statement,branch,condition,path,subroutine prove -lrsv t
+          cover -report Coveralls
